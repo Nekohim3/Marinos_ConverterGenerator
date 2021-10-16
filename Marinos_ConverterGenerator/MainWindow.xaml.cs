@@ -8,7 +8,8 @@
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MWVM();
+            DataContext  = new MWVM();
+            g.TextEditor = TextEditor;
         }
     }
 }

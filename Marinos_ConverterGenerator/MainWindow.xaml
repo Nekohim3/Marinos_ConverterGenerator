@@ -40,7 +40,8 @@
             </DockPanel>
             <CheckBox Grid.Row="1" Content="Экспорт на судно" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=ExportToShip}"/>
             <CheckBox Grid.Row="2" Content="Экспорт в компанию" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=ExportToCompany}"/>
-            <TextBlock Grid.Row="3" Text="Свойства сущности (только экспортируемые)" HorizontalAlignment="Center" Margin="5,0,5,0"/>
+            <CheckBox Grid.Row="3" Content="IsOwnedByShip" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=IsOwnedByShip, Mode=TwoWay}"/>
+            <TextBlock Grid.Row="4" Text="Свойства сущности (только экспортируемые)" HorizontalAlignment="Center" Margin="5,0,5,0"/>
             <ListBox Grid.Row="5" ItemsSource="{Binding Path=Properties, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=SelectedProperty, UpdateSourceTrigger=PropertyChanged}">
                 <ListBox.Resources>
                     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#0090ff"/>
@@ -75,9 +76,11 @@
         </Grid>
         <!-- preview -->
         <Grid Grid.Column="2">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                <TextBox IsReadOnly="True" TextWrapping="NoWrap" AcceptsReturn="True" Text="{Binding Result}"/>
-            </ScrollViewer>
+            <avalonEdit:TextEditor
+                Name="TextEditor"
+                xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+                FontFamily="Consolas"
+                FontSize="10pt"/>
         </Grid>
     </Grid>
 </Window>
