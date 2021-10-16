@@ -24,6 +24,7 @@ namespace Marinos_ConverterGenerator
         private ObservableCollection<Property> _properties;
         private Property                       _selectedProperty;
         private Property                       _newProperty;
+        private bool                           _isOwnedByShip;
 
         #endregion
 
@@ -46,7 +47,10 @@ namespace Marinos_ConverterGenerator
             set
             {
                 _exportToShip = value;
-                Result        = Builder.GetToConverterResult();
+                if (_exportToCompany && !_exportToShip)
+                    IsOwnedByShip = true;
+
+                Result = Builder.GetToConverterResult();
                 RaisePropertyChanged(() => ExportToShip);
             }
         }
@@ -57,9 +61,18 @@ namespace Marinos_ConverterGenerator
             set
             {
                 _exportToCompany = value;
-                Result           = Builder.GetToConverterResult();
+                if (_exportToCompany && !_exportToShip)
+                    IsOwnedByShip = true;
+
+                Result = Builder.GetToConverterResult();
                 RaisePropertyChanged(() => ExportToCompany);
             }
+        }
+
+        public bool IsOwnedByShip
+        {
+            get => _isOwnedByShip;
+            set { _isOwnedByShip = value; RaisePropertyChanged(() => IsOwnedByShip);}
         }
 
         public ObservableCollection<FKEntity> FK_Entities
@@ -143,7 +156,9 @@ namespace Marinos_ConverterGenerator
             get => _result;
             set
             {
-                _result = value;
+                _result           = value;
+                if(g.TextEditor != null)
+                    g.TextEditor.Text = _result;
                 RaisePropertyChanged(() => Result);
             }
         }
