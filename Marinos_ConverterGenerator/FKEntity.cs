@@ -1,7 +1,9 @@
-﻿using Microsoft.Practices.Prism.ViewModel;
+﻿using System;
+using Microsoft.Practices.Prism.ViewModel;
 
 namespace Marinos_ConverterGenerator
 {
+    [Serializable]
     public class FKEntity : NotificationObject
     {
         private int    _id;
@@ -31,6 +33,10 @@ namespace Marinos_ConverterGenerator
         {
             get => _nullable;
             set { _nullable = value;RaisePropertyChanged(() => Nullable); }
+        }
+
+        public FKEntity()
+        {
         }
 
         public FKEntity(int id)

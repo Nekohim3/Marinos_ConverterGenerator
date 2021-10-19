@@ -1,13 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
+using System.IO;
 using System.Linq;
-
+using System.Windows;
+using System.Windows.Data;
+using System.Xml.Serialization;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.ViewModel;
 
 namespace Marinos_ConverterGenerator
 {
+    [Serializable]
     public class MWVM : NotificationObject
     {
 
@@ -25,10 +31,24 @@ namespace Marinos_ConverterGenerator
         private Property                       _selectedProperty;
         private Property                       _newProperty;
         private bool                           _isOwnedByShip;
+        private bool                           _isTree;
+        private string                         _parentName;
 
         #endregion
 
         #region public properties
+
+        public string ParentName
+        {
+            get => _parentName;
+            set
+            {
+                _parentName = value;
+                Result      = Builder.GetToConverterResult();
+                RaisePropertyChanged(() => ParentName);
+                SaveToXml();
+            }
+        }
 
         public string EntityName
         {
@@ -38,6 +58,7 @@ namespace Marinos_ConverterGenerator
                 _entityName = value;
                 Result      = Builder.GetToConverterResult();
                 RaisePropertyChanged(() => EntityName);
+                SaveToXml();
             }
         }
 
@@ -52,6 +73,7 @@ namespace Marinos_ConverterGenerator
 
                 Result = Builder.GetToConverterResult();
                 RaisePropertyChanged(() => ExportToShip);
+                SaveToXml();
             }
         }
 
@@ -66,13 +88,31 @@ namespace Marinos_ConverterGenerator
 
                 Result = Builder.GetToConverterResult();
                 RaisePropertyChanged(() => ExportToCompany);
+                SaveToXml();
             }
         }
 
         public bool IsOwnedByShip
         {
             get => _isOwnedByShip;
-            set { _isOwnedByShip = value; RaisePropertyChanged(() => IsOwnedByShip);}
+            set
+            {
+                _isOwnedByShip = value;
+                RaisePropertyChanged(() => IsOwnedByShip);
+                SaveToXml();
+            }
+        }
+
+        public bool IsTree
+        {
+            get => _isTree;
+            set
+            {
+                _isTree = value;
+                Result  = Builder.GetToConverterResult();
+                RaisePropertyChanged(() => IsTree);
+                SaveToXml();
+            }
         }
 
         public ObservableCollection<FKEntity> FK_Entities
@@ -86,6 +126,7 @@ namespace Marinos_ConverterGenerator
             }
         }
 
+        [XmlIgnore]
         public FKEntity SelectedFKEntity
         {
             get => _selectedFkEntity;
@@ -98,6 +139,7 @@ namespace Marinos_ConverterGenerator
             }
         }
 
+        [XmlIgnore]
         public FKEntity NewFKEntity
         {
             get => _newFkEntity;
@@ -119,6 +161,7 @@ namespace Marinos_ConverterGenerator
             }
         }
 
+        [XmlIgnore]
         public Property SelectedProperty
         {
             get => _selectedProperty;
@@ -131,6 +174,7 @@ namespace Marinos_ConverterGenerator
             }
         }
 
+        [XmlIgnore]
         public Property NewProperty
         {
             get => _newProperty;
@@ -141,6 +185,7 @@ namespace Marinos_ConverterGenerator
             }
         }
 
+        [XmlIgnore]
         public ConverterBuilder Builder
         {
             get => _builder;
@@ -151,13 +196,14 @@ namespace Marinos_ConverterGenerator
             }
         }
 
+        [XmlIgnore]
         public string Result
         {
             get => _result;
             set
             {
-                _result           = value;
-                if(g.TextEditor != null)
+                _result = value;
+                if (g.TextEditor != null)
                     g.TextEditor.Text = _result;
                 RaisePropertyChanged(() => Result);
             }
@@ -173,6 +219,9 @@ namespace Marinos_ConverterGenerator
         public DelegateCommand AddNewPropertyCommand         { get; }
         public DelegateCommand SavePropertyCommand           { get; }
         public DelegateCommand RemoveSelectedPropertyCommand { get; }
+        public DelegateCommand ClearFKEntitiesCommand        { get; }
+        public DelegateCommand ClearPropertiesCommand        { get; }
+        public DelegateCommand TREEHALP                      { get; }
 
         #endregion
 
@@ -181,21 +230,60 @@ namespace Marinos_ConverterGenerator
         public MWVM()
         {
             AddNewFKEntityCommand         = new DelegateCommand(OnAddNewFKEntity);
-            SaveFKEntityCommand           = new DelegateCommand(OnSaveFKEntity,         () => FK_Entities.Count(x => x.Id == NewFKEntity.Id) >= 0);
-            RemoveSelectedFKEntityCommand = new DelegateCommand(OnRemoveSelectedEntity, () => FK_Entities.IndexOf(SelectedFKEntity)          >= 0);
             AddNewPropertyCommand         = new DelegateCommand(OnAddNewProperty);
-            SavePropertyCommand           = new DelegateCommand(OnSaveProperty,           () => Properties.Count(x => x.Id == NewProperty.Id) >= 0);
-            RemoveSelectedPropertyCommand = new DelegateCommand(OnRemoveSelectedProperty, () => Properties.IndexOf(SelectedProperty)          >= 0);
-            Builder                       = new ConverterBuilder(this);
-            NewFKEntity                   = new FKEntity(0);
-            NewProperty                   = new Property(0);
-            FK_Entities                   = new ObservableCollection<FKEntity>();
-            Properties                    = new ObservableCollection<Property>();
+            SaveFKEntityCommand           = new DelegateCommand(OnSaveFKEntity,           () => FK_Entities.Count(x => x.Id == NewFKEntity.Id) >= 0);
+            SavePropertyCommand           = new DelegateCommand(OnSaveProperty,           () => Properties.Count(x => x.Id  == NewProperty.Id) >= 0);
+            RemoveSelectedFKEntityCommand = new DelegateCommand(OnRemoveSelectedEntity,   () => FK_Entities.IndexOf(SelectedFKEntity)          >= 0);
+            RemoveSelectedPropertyCommand = new DelegateCommand(OnRemoveSelectedProperty, () => Properties.IndexOf(SelectedProperty)           >= 0);
+            ClearFKEntitiesCommand        = new DelegateCommand(OnClearFKEntities,        () => FK_Entities != null && FK_Entities.Count != 0);
+            ClearPropertiesCommand        = new DelegateCommand(OnClearProperties,        () => Properties  != null && Properties.Count  != 0);
+            TREEHALP                      = new DelegateCommand(OnTREEHALP);
+
+            Builder     = new ConverterBuilder(this);
+            NewFKEntity = new FKEntity(0);
+            NewProperty = new Property(0);
+            FK_Entities = new ObservableCollection<FKEntity>();
+            Properties  = new ObservableCollection<Property>();
+
         }
 
         #endregion
 
         #region private funcs
+
+        private static object _lock = new object();
+        private static bool   _isLoading;
+        private void SaveToXml()
+        {
+            if (_isLoading) return;
+            lock (_lock)
+            {
+                var formatter = new XmlSerializer(typeof(MWVM));
+                using (var fs = new FileStream("CurrentState.xml", FileMode.Create))
+                    formatter.Serialize(fs, this);
+            }
+        }
+
+        public static MWVM LoadFromXml()
+        {
+            _isLoading = true;
+            lock(_lock)
+            {
+                if (!File.Exists("CurrentState.xml")) return new MWVM();
+                var formatter = new XmlSerializer(typeof(MWVM));
+
+                using (var fs = new FileStream("CurrentState.xml", FileMode.Open))
+                {
+                    var item = (MWVM)formatter.Deserialize(fs);
+
+                    _isLoading = false;
+                    return item;
+                }
+            }
+
+            _isLoading = false;
+        }
+
 
         private void OnAddNewFKEntity()
         {
@@ -208,10 +296,23 @@ namespace Marinos_ConverterGenerator
             if (string.IsNullOrEmpty(NewFKEntity.NavigationPropertyName))
                 return;
 
+            if (FK_Entities.Count(x => x.EntityName == NewFKEntity.EntityName) != 0)
+            {
+                MessageBox.Show("Сущность с таким названием уже добавлена!");
+                return;
+            }
+
+            if (FK_Entities.Count(x => x.NavigationPropertyName == NewFKEntity.NavigationPropertyName) != 0)
+            {
+                MessageBox.Show("Сущность с таким названием нав. свойства уже добавлена!");
+                return;
+            }
+
             FK_Entities.Add(NewFKEntity);
 
             NewFKEntity = new FKEntity(FK_Entities.Count);
             Result      = Builder.GetToConverterResult();
+            SaveToXml();
         }
 
         private void OnSaveFKEntity()
@@ -232,6 +333,7 @@ namespace Marinos_ConverterGenerator
 
                 SelectedFKEntity = newEntity;
                 Result           = Builder.GetToConverterResult();
+                SaveToXml();
             }
         }
 
@@ -244,6 +346,16 @@ namespace Marinos_ConverterGenerator
                 FK_Entities[i].Id = i;
 
             Result = Builder.GetToConverterResult();
+            SaveToXml();
+        }
+
+        private void OnClearFKEntities()
+        {
+            FK_Entities.Clear();
+            SelectedFKEntity = null;
+
+            Result = Builder.GetToConverterResult();
+            SaveToXml();
         }
 
         private void RaiseCanExecChanged()
@@ -254,6 +366,7 @@ namespace Marinos_ConverterGenerator
             AddNewPropertyCommand.RaiseCanExecuteChanged();
             SavePropertyCommand.RaiseCanExecuteChanged();
             RemoveSelectedPropertyCommand.RaiseCanExecuteChanged();
+            SaveToXml();
         }
 
         private void OnAddNewProperty()
@@ -268,6 +381,7 @@ namespace Marinos_ConverterGenerator
 
             NewProperty = new Property(Properties.Count);
             Result      = Builder.GetToConverterResult();
+            SaveToXml();
         }
 
         private void OnSaveProperty()
@@ -288,6 +402,7 @@ namespace Marinos_ConverterGenerator
 
                 SelectedProperty = newProperty;
                 Result           = Builder.GetToConverterResult();
+                SaveToXml();
             }
         }
 
@@ -300,6 +415,23 @@ namespace Marinos_ConverterGenerator
                 Properties[i].Id = i;
 
             Result = Builder.GetToConverterResult();
+            SaveToXml();
+        }
+
+        private void OnClearProperties()
+        {
+            Properties.Clear();
+            SelectedProperty = null;
+
+            Result = Builder.GetToConverterResult();
+            SaveToXml();
+        }
+
+        private void OnTREEHALP()
+        {
+            MessageBox.Show("Очень кривая реализация экспорта / импорта для дерева.\n"          +
+                            "В таблице сущности должно быть поле ParentId и ParentIDOuter!!!\n" +
+                            "(пример смотри в СУБе ImportExport\\Managers\\Converters\\ManagedByCompany\\DMS_SmsPartitionToSerializeConvertor.cs)");
         }
 
         #endregion
@@ -309,5 +441,26 @@ namespace Marinos_ConverterGenerator
 
 
         #endregion
+    }
+    [ValueConversion(typeof(double), typeof(Visibility))]
+    public class BoolToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value,     Type        targetType,
+                              object parameter, CultureInfo culture)
+        {
+            var res = Visibility.Collapsed;
+            if (value == null)
+                return res;
+
+            var val = (bool)value;
+            res = !val ? Visibility.Collapsed : Visibility.Visible;
+            return res;
+        }
+
+        public object ConvertBack(object value,     Type        targetType,
+                                  object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

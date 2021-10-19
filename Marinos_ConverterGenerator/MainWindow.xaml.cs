@@ -8,8 +8,11 @@
         public MainWindow()
         {
             InitializeComponent();
-            DataContext  = new MWVM();
             g.TextEditor = TextEditor;
+            var vm = MWVM.LoadFromXml();
+            DataContext  = vm;
+            vm.Result    = vm.Builder.GetToConverterResult();
+            
         }
     }
 }

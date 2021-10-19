@@ -6,6 +6,9 @@
         xmlns:local="clr-namespace:Marinos_ConverterGenerator"
         mc:Ignorable="d"
         Title="MainWindow" Height="720" Width="1280" d:DataContext="{d:DesignInstance local:MWVM}">
+    <Window.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="300" Width="*"/>
@@ -16,6 +19,7 @@
         <GridSplitter Grid.Column="1" Width="5" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch"/>
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
@@ -41,36 +45,49 @@
             <CheckBox Grid.Row="1" Content="Экспорт на судно" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=ExportToShip}"/>
             <CheckBox Grid.Row="2" Content="Экспорт в компанию" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=ExportToCompany}"/>
             <CheckBox Grid.Row="3" Content="IsOwnedByShip" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=IsOwnedByShip, Mode=TwoWay}"/>
-            <TextBlock Grid.Row="4" Text="Свойства сущности (только экспортируемые)" HorizontalAlignment="Center" Margin="5,0,5,0"/>
-            <ListBox Grid.Row="5" ItemsSource="{Binding Path=Properties, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=SelectedProperty, UpdateSourceTrigger=PropertyChanged}">
+            <Grid Grid.Row="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <CheckBox Content="Tree (Говнокод, но работает)" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=IsTree, Mode=TwoWay}"/>
+                <Button Content="ReadMe" Width="50" HorizontalAlignment="Right" Padding="0" Command="{Binding TREEHALP}"/>
+                <TextBlock Grid.Row="1" Text="Название родительского нав. свойства" Visibility="{Binding IsTree, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <TextBox Grid.Row="2" Text="{Binding ParentName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Visibility="{Binding IsTree, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            </Grid>
+            <TextBlock Grid.Row="5" Text="Свойства сущности (только экспортируемые)" HorizontalAlignment="Center" Margin="5,0,5,0"/>
+            <ListBox Grid.Row="6" ItemsSource="{Binding Path=Properties, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=SelectedProperty, UpdateSourceTrigger=PropertyChanged}">
                 <ListBox.Resources>
                     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#0090ff"/>
                 </ListBox.Resources>
             </ListBox>
-            <TextBlock Grid.Row="6" Text="Название свойства" Margin="5,0,5,0"/>
-            <TextBox Grid.Row="7" Text="{Binding Path=NewProperty.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,0"/>
-            <DockPanel Grid.Row="8" LastChildFill="False">
+            <TextBlock Grid.Row="7" Text="Название свойства" Margin="5,0,5,0"/>
+            <TextBox Grid.Row="8" Text="{Binding Path=NewProperty.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,0"/>
+            <DockPanel Grid.Row="9" LastChildFill="False">
                 <Button Content="Добавить" Margin="5" Padding="3" Command="{Binding AddNewPropertyCommand}"/>
                 <Button Content="Сохранить" Margin="5" Padding="3" Command="{Binding SavePropertyCommand}"/>
                 <Button Content="Удалить" Margin="5" Padding="3" Command="{Binding RemoveSelectedPropertyCommand}"/>
+                <Button Content="Очистить" Margin="5" Padding="3" Command="{Binding ClearPropertiesCommand}"/>
             </DockPanel>
-            <TextBlock Grid.Row="9" Text="Связанные сущности" HorizontalAlignment="Center" Margin="5,0,5,0"/>
-            <ListBox Grid.Row="10" ItemsSource="{Binding Path=FK_Entities, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=SelectedFKEntity, UpdateSourceTrigger=PropertyChanged}">
+            <TextBlock Grid.Row="10" Text="Связанные сущности" HorizontalAlignment="Center" Margin="5,0,5,0"/>
+            <ListBox Grid.Row="11" ItemsSource="{Binding Path=FK_Entities, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=SelectedFKEntity, UpdateSourceTrigger=PropertyChanged}">
                 <ListBox.Resources>
                     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#0090ff"/>
                 </ListBox.Resources>
             </ListBox>
-            <DockPanel Grid.Row="11">
+            <DockPanel Grid.Row="12">
                 <TextBlock Text="Название связанной сущности" Margin="5,0,5,0"/>
                 <CheckBox Content="Nullable" HorizontalAlignment="Right" Margin="5,0,5,0" IsChecked="{Binding Path=NewFKEntity.Nullable, Mode=TwoWay}"/>
             </DockPanel>
-            <TextBox Grid.Row="12" Text="{Binding Path=NewFKEntity.EntityName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,0"/>
-            <TextBlock Grid.Row="13" Text="Название навигационного свойства" Margin="5,0,5,0"/>
-            <TextBox Grid.Row="14" Text="{Binding Path=NewFKEntity.NavigationPropertyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,0"/>
-            <DockPanel Grid.Row="15" LastChildFill="False">
+            <TextBox Grid.Row="13" Text="{Binding Path=NewFKEntity.EntityName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,0"/>
+            <TextBlock Grid.Row="14" Text="Название навигационного свойства" Margin="5,0,5,0"/>
+            <TextBox Grid.Row="15" Text="{Binding Path=NewFKEntity.NavigationPropertyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,0"/>
+            <DockPanel Grid.Row="16" LastChildFill="False">
                 <Button Content="Добавить" Margin="5" Padding="3" Command="{Binding AddNewFKEntityCommand}"/>
                 <Button Content="Сохранить" Margin="5" Padding="3" Command="{Binding SaveFKEntityCommand}"/>
                 <Button Content="Удалить" Margin="5" Padding="3" Command="{Binding RemoveSelectedFKEntityCommand}"/>
+                <Button Content="Очистить" Margin="5" Padding="3" Command="{Binding ClearFKEntitiesCommand}"/>
             </DockPanel>
             
         </Grid>
@@ -78,6 +95,7 @@
         <Grid Grid.Column="2">
             <avalonEdit:TextEditor
                 Name="TextEditor"
+                SyntaxHighlighting="C#"
                 xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
                 FontFamily="Consolas"
                 FontSize="10pt"/>

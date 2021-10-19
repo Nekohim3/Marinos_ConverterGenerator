@@ -106,6 +106,15 @@ namespace Marinos_ConverterGenerator
                     AddLine("\t\t}");
                 AddLine();
             }
+
+            if (VM.IsTree)
+            {
+                AddLine("\t\tif (entity.ParentId != null)");
+                AddLine("\t\t{");
+                AddLine($"\t\t\tserializableEntity.ParentIdOuter = entity.ParentId;");
+                AddLine($"\t\t\tserializableEntity.ParentId = entity.{VM.ParentName}.IDOuter;");
+                AddLine("\t\t}");
+            }
             
             AddLine("\t}");
             AddLine();
@@ -206,6 +215,7 @@ namespace Marinos_ConverterGenerator
             
             if (reqList.Count != 0)
             {
+                AddLine("\t\treturn true");
                 AddLine("\t}");
                 AddLine();
             }
@@ -242,9 +252,40 @@ namespace Marinos_ConverterGenerator
                 AddLine("\t}");
                 AddLine();
             }
-            
+
             #endregion
-            
+
+            #endregion
+
+            #region AfterStepExecuted
+
+            if (VM.IsTree)
+            {
+                AddLine("\tprotected override void AfterStepExecuted()");
+                AddLine("\t{");
+                AddLine($"\t\tvar parentList = {VM.EntityName}.GetAll();");
+                AddLine();
+                AddLine("\t\tforeach (var item in parentList)");
+                AddLine("\t\t{");
+                AddLine("\t\t\tif (item.ParentIDOuter != null && item.ParentId == null)");
+                AddLine("\t\t\t{");
+                AddLine("\t\t\t\tvar complexFieldHelper = new ComplexFieldHelper(DbImportManager);");
+                AddLine($"\t\t\t\tvar entity = item;");
+                AddLine("\t\t\t\tint? parentId = null;");
+                AddLine("\t\t\t\tvar setParentId = false;");
+                AddLine($"\t\t\t\tcomplexFieldHelper.CheckComplexField<{VM.EntityName}>(ref parentId, out setParentId, null, item.ParentIDOuter);");
+                AddLine("\t\t\t\tif (setParentId)");
+                AddLine("\t\t\t\t{");
+                AddLine($"\t\t\t\t\tvar currentEntity = new {VM.EntityName}(entity.Id);");
+                AddLine("\t\t\t\t\tcurrentEntity.ParentId = parentId.Value");
+                AddLine("\t\t\t\t\tcurrentEntity.Save();");
+                AddLine("\t\t\t\t}");
+                AddLine("\t\t\t}");
+                AddLine("\t\t}");
+                AddLine("\t}");
+                AddLine();
+            }
+
             #endregion
 
             #region ImportAtCompany
@@ -256,6 +297,9 @@ namespace Marinos_ConverterGenerator
 
                 foreach (var item in VM.Properties)
                     AddLine($"\t\tentity.{item.Name} = serializeEntity.{item.Name};");
+                
+                if (VM.IsTree)
+                    AddLine("\t\tentity.ParentIDOuter = serializeEntity.ParentIdOuter;");
 
                 AddLine("\t}");
                 AddLine();
@@ -272,6 +316,9 @@ namespace Marinos_ConverterGenerator
 
                 foreach (var item in VM.Properties)
                     AddLine($"\t\tentity.{item.Name} = serializeEntity.{item.Name};");
+
+                if (VM.IsTree)
+                    AddLine("\t\tentity.ParentIDOuter = serializeEntity.ParentIdOuter;");
 
                 AddLine("\t}");
             }
