@@ -1,12 +1,14 @@
-﻿using Microsoft.Practices.Prism.ViewModel;
+﻿using System;
+using Microsoft.Practices.Prism.ViewModel;
 
 namespace Marinos_ConverterGenerator
 {
+    [Serializable]
     public class Property : NotificationObject
     {
         private int    _id;
         private string _name;
-
+        
         public int Id
         {
             get => _id;
@@ -17,6 +19,10 @@ namespace Marinos_ConverterGenerator
         {
             get => _name;
             set { _name = value; RaisePropertyChanged(() => Name);}
+        }
+
+        public Property()
+        {
         }
 
         public Property(int id)
