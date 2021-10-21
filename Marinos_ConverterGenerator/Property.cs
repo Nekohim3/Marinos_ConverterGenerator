@@ -8,7 +8,9 @@ namespace Marinos_ConverterGenerator
     {
         private int    _id;
         private string _name;
-        
+        private string _type;
+        private bool   _nullable;
+
         public int Id
         {
             get => _id;
@@ -19,6 +21,22 @@ namespace Marinos_ConverterGenerator
         {
             get => _name;
             set { _name = value; RaisePropertyChanged(() => Name);}
+        }
+
+        public string Type
+        {
+            get => _type;
+            set
+            {
+                _type = value;
+                RaisePropertyChanged(() => Type);
+            }
+        }
+
+        public bool Nullable
+        {
+            get => _nullable;
+            set { _nullable = value; RaisePropertyChanged(() => Nullable);}
         }
 
         public Property()
@@ -33,13 +51,15 @@ namespace Marinos_ConverterGenerator
         public Property(Property old)
         {
             if (old == null) return;
-            Id   = old.Id;
-            Name = old.Name;
+            Id       = old.Id;
+            Name     = old.Name;
+            Type     = old.Type;
+            Nullable = old.Nullable;
         }
 
         public override string ToString()
         {
-            return Name;
+            return $"{Name} {Type}{(Nullable ? " NULL" : "")}";
         }
     }
 }

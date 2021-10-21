@@ -39,8 +39,20 @@
             </Grid.RowDefinitions>
             <!-- название сущности -->
             <DockPanel Grid.Row="0" LastChildFill="true" Margin="5,0,5,0">
-                <TextBlock Text="Название сущности:" Margin="5"/>
-                <TextBox Width="auto" Text="{Binding Path=EntityName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Название сущности (XXX_):" Margin="5"/>
+                    <TextBox Grid.Column="1" Width="auto" Text="{Binding Path=EntityName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="1" Text="Название сущности (xxx_):" Margin="5"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Width="auto" Text="{Binding Path=SmallEntityName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </Grid>
             </DockPanel>
             <CheckBox Grid.Row="1" Content="Экспорт на судно" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=ExportToShip}"/>
             <CheckBox Grid.Row="2" Content="Экспорт в компанию" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=ExportToCompany}"/>
@@ -62,8 +74,25 @@
                     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#0090ff"/>
                 </ListBox.Resources>
             </ListBox>
-            <TextBlock Grid.Row="7" Text="Название свойства" Margin="5,0,5,0"/>
-            <TextBox Grid.Row="8" Text="{Binding Path=NewProperty.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,0"/>
+            <Grid Grid.Row="7">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Название свойства" Margin="5,0,5,0"/>
+                <TextBlock Grid.Column="1" Text="Тип свойства" Margin="5,0,5,0" HorizontalAlignment="Right"/>
+                <CheckBox Grid.Column="2" Content="null" Margin="5,0,5,0" IsChecked="{Binding Path=NewProperty.Nullable, Mode=TwoWay}"/>
+
+            </Grid>
+            <Grid Grid.Row="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{Binding Path=NewProperty.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,5,0"/>
+                <ComboBox Grid.Column="1" Margin="5,0,5,0" ItemsSource="{Binding PropertyTypes}" SelectedItem="{Binding NewProperty.Type, Mode=TwoWay}"/>
+            </Grid>
             <DockPanel Grid.Row="9" LastChildFill="False">
                 <Button Content="Добавить" Margin="5" Padding="3" Command="{Binding AddNewPropertyCommand}"/>
                 <Button Content="Сохранить" Margin="5" Padding="3" Command="{Binding SavePropertyCommand}"/>
@@ -93,12 +122,59 @@
         </Grid>
         <!-- preview -->
         <Grid Grid.Column="2">
-            <avalonEdit:TextEditor
+            <TabControl>
+                <TabItem Header="Converter">
+                    <avalonEdit:TextEditor
+                        Name="ConverterTextEditor"
+                        SyntaxHighlighting="C#"
+                        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+                        FontFamily="Consolas"
+                        IsReadOnly="True"
+                        FontSize="10pt"/>
+                </TabItem>
+                <TabItem Header="SeriazableEntity">
+                    <avalonEdit:TextEditor
+                        Name="SeriazableEntityTextEditor"
+                        SyntaxHighlighting="C#"
+                        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+                        FontFamily="Consolas"
+                        IsReadOnly="True"
+                        FontSize="10pt"/>
+                </TabItem>
+                <TabItem Header="Loader">
+                    <avalonEdit:TextEditor
+                        Name="LoaderTextEditor"
+                        SyntaxHighlighting="C#"
+                        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+                        FontFamily="Consolas"
+                        IsReadOnly="True"
+                        FontSize="10pt"/>
+                </TabItem>
+                <TabItem Header="Entity">
+                    <avalonEdit:TextEditor
+                        Name="EntityTextEditor"
+                        SyntaxHighlighting="C#"
+                        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+                        FontFamily="Consolas"
+                        IsReadOnly="True"
+                        FontSize="10pt"/>
+                </TabItem>
+                <TabItem Header="SeriazablePackage">
+                    <avalonEdit:TextEditor
+                        Name="SeriazablePackageTextEditor"
+                        SyntaxHighlighting="C#"
+                        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+                        FontFamily="Consolas"
+                        IsReadOnly="True"
+                        FontSize="10pt"/>
+                </TabItem>
+            </TabControl>
+            <!--<avalonEdit:TextEditor
                 Name="TextEditor"
                 SyntaxHighlighting="C#"
                 xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
                 FontFamily="Consolas"
-                FontSize="10pt"/>
+                FontSize="10pt"/>-->
         </Grid>
     </Grid>
 </Window>

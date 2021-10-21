@@ -8,10 +8,14 @@
         public MainWindow()
         {
             InitializeComponent();
-            g.TextEditor = TextEditor;
+            g.ConverterTextEditor         = ConverterTextEditor;
+            g.SeriazableEntityTextEditor  = SeriazableEntityTextEditor;
+            g.LoaderTextEditor            = LoaderTextEditor;
+            g.EntityTextEditor            = EntityTextEditor;
+            g.SeriazablePackageTextEditor = SeriazablePackageTextEditor;
             var vm = MWVM.LoadFromXml();
             DataContext  = vm;
-            vm.Result    = vm.Builder.GetToConverterResult();
+            vm.ResultConverter    = vm.Builder.GetConverterResult();
             
         }
     }

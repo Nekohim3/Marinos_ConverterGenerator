@@ -26,13 +26,19 @@ namespace Marinos_ConverterGenerator
         private FKEntity                       _selectedFkEntity;
         private FKEntity                       _newFkEntity;
         private ConverterBuilder               _builder;
-        private string                         _result;
         private ObservableCollection<Property> _properties;
         private Property                       _selectedProperty;
         private Property                       _newProperty;
         private bool                           _isOwnedByShip;
         private bool                           _isTree;
         private string                         _parentName;
+        private string                         _resultConverter;
+        private string                         _resultSeriazableEntity;
+        private string                         _resultLoader;
+        private string                         _resultEntity;
+        private string                         _resultSeriazablePackage;
+        private string                         _selectedPropertyType;
+        private string                         _smallEntityName;
 
         #endregion
 
@@ -44,7 +50,7 @@ namespace Marinos_ConverterGenerator
             set
             {
                 _parentName = value;
-                Result      = Builder.GetToConverterResult();
+                GetResults();
                 RaisePropertyChanged(() => ParentName);
                 SaveToXml();
             }
@@ -56,8 +62,20 @@ namespace Marinos_ConverterGenerator
             set
             {
                 _entityName = value;
-                Result      = Builder.GetToConverterResult();
+                GetResults();
                 RaisePropertyChanged(() => EntityName);
+                SaveToXml();
+            }
+        }
+
+        public string SmallEntityName
+        {
+            get => _smallEntityName;
+            set
+            {
+                _smallEntityName = value; 
+                GetResults();
+                RaisePropertyChanged(() => SmallEntityName);
                 SaveToXml();
             }
         }
@@ -71,7 +89,7 @@ namespace Marinos_ConverterGenerator
                 if (_exportToCompany && !_exportToShip)
                     IsOwnedByShip = true;
 
-                Result = Builder.GetToConverterResult();
+                GetResults();
                 RaisePropertyChanged(() => ExportToShip);
                 SaveToXml();
             }
@@ -86,7 +104,7 @@ namespace Marinos_ConverterGenerator
                 if (_exportToCompany && !_exportToShip)
                     IsOwnedByShip = true;
 
-                Result = Builder.GetToConverterResult();
+                GetResults();
                 RaisePropertyChanged(() => ExportToCompany);
                 SaveToXml();
             }
@@ -98,6 +116,7 @@ namespace Marinos_ConverterGenerator
             set
             {
                 _isOwnedByShip = value;
+                GetResults();
                 RaisePropertyChanged(() => IsOwnedByShip);
                 SaveToXml();
             }
@@ -109,7 +128,7 @@ namespace Marinos_ConverterGenerator
             set
             {
                 _isTree = value;
-                Result  = Builder.GetToConverterResult();
+                GetResults();
                 RaisePropertyChanged(() => IsTree);
                 SaveToXml();
             }
@@ -121,7 +140,7 @@ namespace Marinos_ConverterGenerator
             set
             {
                 _fkEntities = value;
-                Result      = Builder.GetToConverterResult();
+                GetResults();
                 RaisePropertyChanged(() => FK_Entities);
             }
         }
@@ -156,7 +175,7 @@ namespace Marinos_ConverterGenerator
             set
             {
                 _properties = value;
-                Result      = Builder.GetToConverterResult();
+                GetResults();
                 RaisePropertyChanged(() => Properties);
             }
         }
@@ -197,17 +216,72 @@ namespace Marinos_ConverterGenerator
         }
 
         [XmlIgnore]
-        public string Result
+        public string ResultConverter
         {
-            get => _result;
+            get => _resultConverter;
             set
             {
-                _result = value;
-                if (g.TextEditor != null)
-                    g.TextEditor.Text = _result;
-                RaisePropertyChanged(() => Result);
+                _resultConverter = value;
+                if (g.ConverterTextEditor != null)
+                    g.ConverterTextEditor.Text = _resultConverter;
+                RaisePropertyChanged(() => ResultConverter);
             }
         }
+
+        [XmlIgnore]
+        public string ResultSeriazableEntity
+        {
+            get => _resultSeriazableEntity;
+            set
+            {
+                _resultSeriazableEntity = value;
+                if (g.SeriazableEntityTextEditor != null)
+                    g.SeriazableEntityTextEditor.Text = _resultSeriazableEntity;
+                RaisePropertyChanged(() => ResultSeriazableEntity);
+            }
+        }
+
+        [XmlIgnore]
+        public string ResultLoader
+        {
+            get => _resultLoader;
+            set
+            {
+                _resultLoader = value;
+                if (g.LoaderTextEditor != null)
+                    g.LoaderTextEditor.Text = _resultLoader;
+                RaisePropertyChanged(() => ResultLoader);
+            }
+        }
+
+        [XmlIgnore]
+        public string ResultEntity
+        {
+            get => _resultLoader;
+            set
+            {
+                _resultEntity = value;
+                if (g.EntityTextEditor != null)
+                    g.EntityTextEditor.Text = _resultEntity;
+                RaisePropertyChanged(() => ResultEntity);
+            }
+        }
+
+        [XmlIgnore]
+        public string ResultSeriazablePackage
+        {
+            get => _resultLoader;
+            set
+            {
+                _resultSeriazablePackage = value;
+                if (g.SeriazablePackageTextEditor != null)
+                    g.SeriazablePackageTextEditor.Text = _resultSeriazablePackage;
+                RaisePropertyChanged(() => ResultSeriazablePackage);
+            }
+        }
+
+        [XmlIgnore]
+        public ObservableCollection<string> PropertyTypes { get; set; }
 
         #endregion
 
@@ -239,12 +313,23 @@ namespace Marinos_ConverterGenerator
             ClearPropertiesCommand        = new DelegateCommand(OnClearProperties,        () => Properties  != null && Properties.Count  != 0);
             TREEHALP                      = new DelegateCommand(OnTREEHALP);
 
-            Builder     = new ConverterBuilder(this);
-            NewFKEntity = new FKEntity(0);
-            NewProperty = new Property(0);
-            FK_Entities = new ObservableCollection<FKEntity>();
-            Properties  = new ObservableCollection<Property>();
-
+            Builder       = new ConverterBuilder(this);
+            NewFKEntity   = new FKEntity(0);
+            NewProperty   = new Property(0);
+            FK_Entities   = new ObservableCollection<FKEntity>();
+            Properties    = new ObservableCollection<Property>();
+            PropertyTypes = new ObservableCollection<string>(new List<string>
+                                                             {
+                                                                 "string",
+                                                                 "int",
+                                                                 "DateTime",
+                                                                 "bool",
+                                                                 "float",
+                                                                 "double",
+                                                                 "decimal",
+                                                                 "short",
+                                                                 "long"
+                                                             });
         }
 
         #endregion
@@ -295,7 +380,7 @@ namespace Marinos_ConverterGenerator
 
             if (string.IsNullOrEmpty(NewFKEntity.NavigationPropertyName))
                 return;
-
+            
             if (FK_Entities.Count(x => x.EntityName == NewFKEntity.EntityName) != 0)
             {
                 MessageBox.Show("Сущность с таким названием уже добавлена!");
@@ -311,7 +396,7 @@ namespace Marinos_ConverterGenerator
             FK_Entities.Add(NewFKEntity);
 
             NewFKEntity = new FKEntity(FK_Entities.Count);
-            Result      = Builder.GetToConverterResult();
+            GetResults();
             SaveToXml();
         }
 
@@ -332,7 +417,7 @@ namespace Marinos_ConverterGenerator
                     FK_Entities[i].Id = i;
 
                 SelectedFKEntity = newEntity;
-                Result           = Builder.GetToConverterResult();
+                GetResults();
                 SaveToXml();
             }
         }
@@ -345,7 +430,7 @@ namespace Marinos_ConverterGenerator
             for (var i = 0; i < FK_Entities.Count; i++)
                 FK_Entities[i].Id = i;
 
-            Result = Builder.GetToConverterResult();
+            GetResults();
             SaveToXml();
         }
 
@@ -354,7 +439,7 @@ namespace Marinos_ConverterGenerator
             FK_Entities.Clear();
             SelectedFKEntity = null;
 
-            Result = Builder.GetToConverterResult();
+            GetResults();
             SaveToXml();
         }
 
@@ -377,10 +462,22 @@ namespace Marinos_ConverterGenerator
             if (string.IsNullOrEmpty(NewProperty.Name))
                 return;
 
+            if (string.IsNullOrEmpty(NewProperty.Type))
+            {
+                MessageBox.Show("Выберите тип");
+                return;
+            }
+
+            if (Properties.Count(x => x.Name == NewProperty.Name) != 0)
+            {
+                MessageBox.Show("Уже есть");
+                return;
+            }
+
             Properties.Add(NewProperty);
 
             NewProperty = new Property(Properties.Count);
-            Result      = Builder.GetToConverterResult();
+            GetResults();
             SaveToXml();
         }
 
@@ -401,7 +498,7 @@ namespace Marinos_ConverterGenerator
                     Properties[i].Id = i;
 
                 SelectedProperty = newProperty;
-                Result           = Builder.GetToConverterResult();
+                GetResults();
                 SaveToXml();
             }
         }
@@ -414,7 +511,7 @@ namespace Marinos_ConverterGenerator
             for (var i = 0; i < Properties.Count; i++)
                 Properties[i].Id = i;
 
-            Result = Builder.GetToConverterResult();
+            GetResults();
             SaveToXml();
         }
 
@@ -423,7 +520,7 @@ namespace Marinos_ConverterGenerator
             Properties.Clear();
             SelectedProperty = null;
 
-            Result = Builder.GetToConverterResult();
+            GetResults();
             SaveToXml();
         }
 
@@ -438,7 +535,14 @@ namespace Marinos_ConverterGenerator
 
         #region public funcs
 
-
+        public void GetResults()
+        {
+            ResultConverter         = Builder.GetConverterResult();
+            ResultSeriazableEntity  = Builder.GetSeriazableEntityResult();
+            ResultLoader            = Builder.GetLoaderResult();
+            ResultEntity            = Builder.GetEntityResult();
+            ResultSeriazablePackage = Builder.GetSeriazablePackageResult();
+        }
 
         #endregion
     }
