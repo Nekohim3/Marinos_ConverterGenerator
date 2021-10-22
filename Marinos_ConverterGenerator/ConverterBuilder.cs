@@ -315,7 +315,14 @@ namespace Marinos_ConverterGenerator
                 AddLine($"\t\tvar id{item.NavigationPropertyName} = entity.Id{item.NavigationPropertyName} == 0 ? null : entity.Id{item.NavigationPropertyName};");
                 AddLine($"\t\tvar set{item.NavigationPropertyName} = false");
                 AddLine($"\t\tif(complexFieldHelper.CheckComplexField<{item.EntityName}>(ref id{item.NavigationPropertyName}, out set{item.NavigationPropertyName}, serializeEntity.Id{item.NavigationPropertyName}, serializeEntity.Id{item.NavigationPropertyName}Outer))");
-                AddLine("\t\t\treturn false;");
+                if (VM.ExportToCompany && VM.ExportToShip)
+                {
+                    AddLine("\t\t{");
+                    AddLine("\t\t\t\t//Я хз надо или нет (поидее для ManagedByTwoEntityFromSerializeConverter надо, но почему то есть не везде)");
+                    AddLine("\t\t\t\tCreateRemoveCommand(serializeEntity, entity, ImportArgs.Date);");
+                    AddLine("\t\t\t\treturn false;");
+                    AddLine("\t\t}");
+                }
                 AddLine();
                 AddLine($"\t\tif(set{item.NavigationPropertyName})");
                 AddLine($"\t\t\tentity.Id{item.NavigationPropertyName} = id{item.NavigationPropertyName}.Value");
@@ -328,31 +335,42 @@ namespace Marinos_ConverterGenerator
                 AddLine("\t}");
                 AddLine();
             }
-            
+
+            #endregion
+
+            #region WithParent
+
+            if (VM.IsTree)
+            {
+                AddLine($"\tprotected override bool CheckAndSetOptionalComplexProperty(Serializable{VM.EntityName} serializeEntity, {VM.EntityName} parent, {VM.EntityName} entity)");
+                AddLine("\t{");
+                AddLine("\t\tvar needChangeSelfModifiedDate = false;");
+                AddLine("\t\tvar complexFieldHelper = new ComplexFieldHelper(DbImportManager);");
+                AddLine();
+                AddLine("\t\tif(parent == null)");
+                AddLine("\t\t{");
+                AddLine("\t\t\tvar idParent = entity.IdParent;");
+                AddLine("\t\t\tvar setParent = false;");
+                AddLine($"\t\t\tneedChangeSelfModifiedDate = complexFieldHelper.CheckComplexField<{VM.EntityName}>(ref idParent, out setParent, null, serializeEntity.IdParentOuter);");
+                AddLine();
+                AddLine("\t\t\tif(setParent) entity.IdParent = idParent;");
+                AddLine("\t\t}");
+                AddLine();
+                AddLine("\t\treturn needChangeSelfModifiedDate;");
+                AddLine("\t}");
+            }
+
             #endregion
 
             #region noReq
 
-            if (noReqList.Count != 0 || VM.IsTree)
+            if (noReqList.Count != 0)
             {
                 AddLine($"\t// ТУТ МОЖЕТ ПОНАДОБИТЬСЯ ДОПОЛНИТЕЛЬНАЯ ЛОГИКА. ПИСАТЬ ВРУЧНУЮ!!!");
                 AddLine($"\tprotected override bool CheckAndSetOptionalComplexProperty(Serializable{VM.EntityName} serializeEntity, {VM.EntityName} entity)");
                 AddLine("\t{");
                 AddLine($"\t\tvar complexFieldHelper = new ComplexFieldHelper(DbImportManager);");
                 AddLine($"\t\tvar needChangeSelfModifiedDate = false;");
-                AddLine();
-            }
-
-            if (VM.IsTree)
-            {
-                AddLine(
-                        $"\t\tvar idParent = entity.IdParent == 0 ? null : entity.IdParent;");
-                AddLine($"\t\tvar setParent = false");
-                AddLine(
-                        $"\t\tneedChangeSelfModifiedDate = needChangeSelfModifiedDate | complexFieldHelper.CheckComplexField<{VM.EntityName}>(ref idParent, out setParent, serializeEntity.IdParent, serializeEntity.IdParentOuter))");
-                AddLine();
-                AddLine($"\t\tif(setParent)");
-                AddLine($"\t\t\tentity.IdParent = idParent.Value");
                 AddLine();
             }
 
@@ -369,7 +387,7 @@ namespace Marinos_ConverterGenerator
                 AddLine();
             }
 
-            if (noReqList.Count != 0 || VM.IsTree)
+            if (noReqList.Count != 0)
             {
                 AddLine($"\t\treturn needChangeSelfModifiedDate;");
                 AddLine("\t}");
@@ -380,37 +398,6 @@ namespace Marinos_ConverterGenerator
 
             #endregion
 
-            #region AfterStepExecuted
-
-            //if (VM.IsTree)
-            //{
-            //    AddLine("\tprotected override void AfterStepExecuted()");
-            //    AddLine("\t{");
-            //    AddLine($"\t\tvar parentList = {VM.EntityName}.GetAll();");
-            //    AddLine();
-            //    AddLine("\t\tforeach (var item in parentList)");
-            //    AddLine("\t\t{");
-            //    AddLine("\t\t\tif (item.ParentIDOuter != null && item.ParentId == null)");
-            //    AddLine("\t\t\t{");
-            //    AddLine("\t\t\t\tvar complexFieldHelper = new ComplexFieldHelper(DbImportManager);");
-            //    AddLine($"\t\t\t\tvar entity = item;");
-            //    AddLine("\t\t\t\tint? parentId = null;");
-            //    AddLine("\t\t\t\tvar setParentId = false;");
-            //    AddLine($"\t\t\t\tcomplexFieldHelper.CheckComplexField<{VM.EntityName}>(ref parentId, out setParentId, null, item.ParentIDOuter);");
-            //    AddLine("\t\t\t\tif (setParentId)");
-            //    AddLine("\t\t\t\t{");
-            //    AddLine($"\t\t\t\t\tvar currentEntity = new {VM.EntityName}(entity.Id);");
-            //    AddLine("\t\t\t\t\tcurrentEntity.ParentId = parentId.Value");
-            //    AddLine("\t\t\t\t\tcurrentEntity.Save();");
-            //    AddLine("\t\t\t\t}");
-            //    AddLine("\t\t\t}");
-            //    AddLine("\t\t}");
-            //    AddLine("\t}");
-            //    AddLine();
-            //}
-
-            #endregion
-
             #region ImportAtCompany
 
             if (VM.ExportToCompany)
@@ -418,11 +405,15 @@ namespace Marinos_ConverterGenerator
                 AddLine($"\tprotected override void ImportAtCompany(Serializable{VM.EntityName} serializeEntity, {VM.EntityName} entity)");
                 AddLine("\t{");
 
+                if (VM.ExportToCompany && VM.ExportToShip)
+                {
+                    AddLine("\t\t//Тоже хз надо или нет.");
+                    AddLine("\t\tif (serializeEntity.ChangeInfo.IsAdding) entity.IdShip = ImportArgs.ShipId;");
+                    AddLine();
+                }
+
                 foreach (var item in VM.Properties)
                     AddLine($"\t\tentity.{item.Name} = serializeEntity.{item.Name};");
-                
-                if (VM.IsTree)
-                    AddLine("\t\tentity.ParentIDOuter = serializeEntity.ParentIdOuter;");
 
                 AddLine("\t}");
                 AddLine();
@@ -439,9 +430,6 @@ namespace Marinos_ConverterGenerator
 
                 foreach (var item in VM.Properties)
                     AddLine($"\t\tentity.{item.Name} = serializeEntity.{item.Name};");
-
-                if (VM.IsTree)
-                    AddLine("\t\tentity.ParentIDOuter = serializeEntity.ParentIdOuter;");
 
                 AddLine("\t}");
             }
@@ -466,6 +454,7 @@ namespace Marinos_ConverterGenerator
             _res = "";
 
             AddLine("//MARINER/ImportExport/SerializableEntities/DualChanged");
+            AddLine("Создать класс");
             AddLine();
 
             AddLine($"public class Serializable{VM.EntityName} : DualChanged");
@@ -494,10 +483,26 @@ namespace Marinos_ConverterGenerator
 
             _res = "";
 
+            AddLine("//MARINER/DBServices/EI/EntityLoaders");
+            AddLine("!!!Если надо лоадер файлов создаем вручную!!!");
+            AddLine();
+            
+            AddLine("//GetConditionsFor... создать вручную если надо (Пример есть в лоадере заявок)");
+            AddLine();
+
             AddLine($"class {VM.EntityName}Loader : {(VM.IsOwnedByShip ? "IEntityOwnedByShipLoader" : "IEntityOwnedByCompanyLoader")}<{VM.EntityName}, {VM.SmallEntityName}>");
             AddLine("{");
 
             AddLine($"\tprotected override IQueryable<{VM.SmallEntityName}> GetForExportToShip(MainContext context, EIArgs args) =>");
+            AddLine($"\t\treturn context.{VM.SmallEntityName}.Include(ChangeInfoRecord.EntityName){(VM.FK_Entities.Count == 0 ? ";" : "")}");
+            for (var i = 0; i < VM.FK_Entities.Count; i++)
+            {
+                var item = VM.FK_Entities[i];
+                AddLine($"\t\t\t\t\t.Include({item.EntityName}).EntityName{(i == VM.FK_Entities.Count - 1 ? ";" : "")}");
+            }
+            AddLine();
+
+            AddLine($"\tprotected override IQueryable<{VM.SmallEntityName}> GetForExportToCompany(MainContext context, EIArgs args) =>");
             AddLine($"\t\treturn context.{VM.SmallEntityName}.Include(ChangeInfoRecord.EntityName){(VM.FK_Entities.Count == 0 ? ";" : "")}");
             for (var i = 0; i < VM.FK_Entities.Count; i++)
             {
@@ -525,7 +530,7 @@ namespace Marinos_ConverterGenerator
             AddLine();
 
             AddLine($"\tprotected override {VM.EntityName} CreateEntityLoadedByIdOrIDOuter({VM.SmallEntityName} c_entity, MainContext context) =>");
-            AddLine($"\t\treturn new {VM.EntityName}(c_entity, context);");
+            AddLine($"\t\tnew {VM.EntityName}(c_entity, context);");
             AddLine();
 
             if (VM.IsTree)
@@ -551,8 +556,6 @@ namespace Marinos_ConverterGenerator
                 AddLine("\t}");
             }
 
-
-
             AddLine("}");
 
             return _res;
@@ -565,7 +568,22 @@ namespace Marinos_ConverterGenerator
 
             _res = "";
 
-
+            AddLine($"//в класс {VM.EntityName} добавить:");
+            AddLine();
+            if (VM.IsTree)
+            {
+                AddLine($"public List<{VM.EntityName}> Childs {{ get; set; }}");
+                AddLine();
+                AddLine("public void LoadChilds()");
+                AddLine("{");
+                AddLine($"\tChilds = new List<{VM.EntityName}>();");
+                AddLine($"\tvar context = MainContext.CreateCurrentContext();");
+                AddLine($"\tvar list = context.{VM.SmallEntityName}.Where(item => item.IdParent == Id);");
+                AddLine();
+                AddLine("\tforeach (var entity in list)");
+                AddLine($"\t\tChilds.Add(new {VM.EntityName}(entity, context));");
+                AddLine("}");
+            }
 
             return _res;
         }
@@ -577,7 +595,55 @@ namespace Marinos_ConverterGenerator
 
             _res = "";
 
+            AddLine("//MARINER/ImportExport/SerializableEntities/Main/SerializablePackage.cs");
+            if (VM.IsTree)
+            {
+                AddLine("В конец класса добавить:");
+                AddLine();
+                AddLine($"public int NumberOf{VM.EntityName}ToAdd  {{ get; set; }}");
+                AddLine($"public int NumberOf{VM.EntityName}ToEdit {{ get; set; }}");
+            }
+
+            return _res;
+        }
+
+        public string GetAdditionalResult()
+        {
+
+            if (!VM.ExportToCompany && !VM.ExportToShip)
+                return null;
+
+            _res = "";
+            
+            AddLine("MARINER/DBServices/Base Entity/EntityTypeVariant.cs");
+            AddLine($"В enum EntityTypeVariant добавить c уникальным числом (если небыло ранее добавлено в процессе создания {VM.EntityName}):");
+            AddLine($"{VM.SmallEntityName} = число,");
+            AddLine();
+            AddLine($"Так же в {VM.EntityName} нужно добавить (если не сделано ранее):");
+            AddLine($"public override EntityTypeVariant EntityType => EntityTypeVariant.{VM.SmallEntityName};");
+            AddLine(new string('-', 50));
+            
+            AddLine("//MARINER/DBServices/EI/LoadersFactory.cs");
+            AddLine("Добавить в конец функции GetEntityLoader() следующее:");
+            AddLine();
+            AddLine($"if (typeof(ChEntity) == typeof({VM.EntityName}))");
+            AddLine($"\treturn new {VM.EntityName}Loader() as DBServices.EI.EntityLoaders.ILoaders.ILoader<ChEntity>;");
+            AddLine();
+            AddLine("Если создан лоадер файлов, то добавить его в конец функции GetEntityFileDataLoader()");
+            AddLine(new string('-', 50));
+            AddLine("//MARINER/ImportExport/Managers/Initialization/ImportStepSequence.cs");
+            AddLine("Добавить в ImportStepEnum примерно следующее:");
+            AddLine();
+            AddLine("//Числа должны быть уникальными!!!");
+            AddLine($"{VM.EntityName}_Add = число, {VM.EntityName}_Edit = число,");
+            AddLine();
+            AddLine("В GetOrderedSteps определить порядок:");
+            AddLine();
+            AddLine($"ImportStepEnum.{VM.EntityName}_Add,");
+            AddLine($"ImportStepEnum.{VM.EntityName}_Edit,");
             AddLine("");
+            AddLine("В GetOrderedCommands определить порядок удаления (нужно учитывать связи между таблицами в бд):");
+            AddLine($"DBServices.EntityTypeVariant.{VM.SmallEntityName},");
 
             return _res;
         }

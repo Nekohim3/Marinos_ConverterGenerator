@@ -9,5 +9,6 @@ namespace Marinos_ConverterGenerator
         public static TextEditor LoaderTextEditor            { get; set; }
         public static TextEditor EntityTextEditor            { get; set; }
         public static TextEditor SeriazablePackageTextEditor { get; set; }
+        public static TextEditor AdditionalTextEditor        { get; set; }
     }
 }
