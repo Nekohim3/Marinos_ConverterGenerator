@@ -13,9 +13,10 @@
             g.LoaderTextEditor            = LoaderTextEditor;
             g.EntityTextEditor            = EntityTextEditor;
             g.SeriazablePackageTextEditor = SeriazablePackageTextEditor;
+            g.AdditionalTextEditor        = AdditionalTextEditor;
             var vm = MWVM.LoadFromXml();
             DataContext  = vm;
-            vm.ResultConverter    = vm.Builder.GetConverterResult();
+            vm.GetResults();
             
         }
     }

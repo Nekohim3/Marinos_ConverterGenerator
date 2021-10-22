@@ -37,6 +37,7 @@ namespace Marinos_ConverterGenerator
         private string                         _resultLoader;
         private string                         _resultEntity;
         private string                         _resultSeriazablePackage;
+        private string                         _resultAdditional;
         private string                         _selectedPropertyType;
         private string                         _smallEntityName;
 
@@ -277,6 +278,19 @@ namespace Marinos_ConverterGenerator
                 if (g.SeriazablePackageTextEditor != null)
                     g.SeriazablePackageTextEditor.Text = _resultSeriazablePackage;
                 RaisePropertyChanged(() => ResultSeriazablePackage);
+            }
+        }
+
+        [XmlIgnore]
+        public string ResultAdditional
+        {
+            get => _resultLoader;
+            set
+            {
+                _resultAdditional = value;
+                if (g.AdditionalTextEditor != null)
+                    g.AdditionalTextEditor.Text = _resultAdditional;
+                RaisePropertyChanged(() => ResultAdditional);
             }
         }
 
@@ -542,6 +556,7 @@ namespace Marinos_ConverterGenerator
             ResultLoader            = Builder.GetLoaderResult();
             ResultEntity            = Builder.GetEntityResult();
             ResultSeriazablePackage = Builder.GetSeriazablePackageResult();
+            ResultAdditional        = Builder.GetAdditionalResult();
         }
 
         #endregion
