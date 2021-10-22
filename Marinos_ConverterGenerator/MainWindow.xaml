@@ -63,8 +63,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <CheckBox Content="Tree (Говнокод, но работает)" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=IsTree, Mode=TwoWay}"/>
-                <Button Content="ReadMe" Width="50" HorizontalAlignment="Right" Padding="0" Command="{Binding TREEHALP}"/>
+                <CheckBox Content="IsTree" HorizontalAlignment="Left" Margin="5,0,5,0" IsChecked="{Binding Path=IsTree, Mode=TwoWay}"/>
+                <!--<Button Content="ReadMe" Width="50" HorizontalAlignment="Right" Padding="0" Command="{Binding TREEHALP}"/>-->
                 <TextBlock Grid.Row="1" Text="Название родительского нав. свойства" Visibility="{Binding IsTree, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 <TextBox Grid.Row="2" Text="{Binding ParentName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Visibility="{Binding IsTree, Converter={StaticResource BoolToVisibilityConverter}}"/>
             </Grid>
@@ -168,13 +168,16 @@
                         IsReadOnly="True"
                         FontSize="10pt"/>
                 </TabItem>
+                <TabItem Header="Дополнительное инфо">
+                    <avalonEdit:TextEditor
+                        Name="AdditionalTextEditor"
+                        SyntaxHighlighting="C#"
+                        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+                        FontFamily="Consolas"
+                        IsReadOnly="True"
+                        FontSize="10pt"/>
+                </TabItem>
             </TabControl>
-            <!--<avalonEdit:TextEditor
-                Name="TextEditor"
-                SyntaxHighlighting="C#"
-                xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
-                FontFamily="Consolas"
-                FontSize="10pt"/>-->
         </Grid>
     </Grid>
 </Window>
